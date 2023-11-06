@@ -5,11 +5,10 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"log"
 	"net/http"
 	"os"
-	"path"
 	"time"
 
 	"golang.org/x/oauth2"
@@ -71,7 +70,7 @@ func tokenFromFile(file string) (*oauth2.Token, error) {
 
 	defer res.Body.Close()
 
-	body, err := ioutil.ReadAll(res.Body)
+	body, err := io.ReadAll(res.Body)
 	if err != nil {
 		return nil, err
 	}
@@ -95,12 +94,8 @@ func getClient(ctx context.Context) *http.Client {
 	// 	log.Fatalf("Failed to parse JSON data: %v", err)
 	// }
 
-	wd, _ := os.Getwd()
-	fullPath := path.Join(wd, "gc-link", "oauth_client.json")
-	if _, err := os.Stat(fullPath); err != nil {
-		fullPath = path.Join(wd, "oauth_client.json")
-	}
-	bs, err := ioutil.ReadFile(fullPath)
+	fullPath := getFilePath("oauth_client.json", "")
+	bs, err := os.ReadFile(fullPath)
 	if err != nil {
 		log.Fatalf("Unable to read client secret file: %v", err)
 	}
@@ -111,10 +106,7 @@ func getClient(ctx context.Context) *http.Client {
 		log.Fatal(err)
 	}
 
-	tokenFilePath := path.Join(wd, "gc-link", "token.json")
-	if _, err := os.Stat(tokenFilePath); err != nil {
-		tokenFilePath = path.Join(wd, "token.json")
-	}
+	tokenFilePath := getFilePath("token.json", "")
 	token, err := tokenFromFile(tokenFilePath)
 	if err != nil {
 		// アクセストークンが切れたら削除
@@ -140,11 +132,11 @@ func getRfcTime(t time.Time) string {
 	return timeString
 }
 
-func createEvent(servie calendar.Service, day string) (*calendar.Event, error) {
+func createEvent(servie calendar.Service, day string, summary string) (*calendar.Event, error) {
 	formatDay := Substr(day, 0, 4) + "-" + Substr(day, 4, 6) + "-" + Substr(day, 6, 8)
 
 	event := &calendar.Event{
-		Summary: "社休日",
+		Summary: summary,
 		Start: &calendar.EventDateTime{
 			Date:     formatDay,
 			TimeZone: "Asia/Tokyo",

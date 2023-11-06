@@ -2,6 +2,8 @@ package main
 
 import (
 	"flag"
+	"os"
+	"path"
 	"strconv"
 	"strings"
 	"time"
@@ -38,4 +40,24 @@ func removeTarget(array []string, target string) []string {
 	}
 
 	return array
+}
+
+func getFilePath(fileName string, subDir string) string {
+	wd, _ := os.Getwd()
+
+	var filePath = ""
+
+	if subDir != "" {
+		filePath = path.Join(wd, "gc-link", subDir, fileName)
+		if _, err := os.Stat(filePath); err != nil {
+			filePath = path.Join(wd, subDir, fileName)
+		}
+	} else {
+		filePath = path.Join(wd, "gc-link", fileName)
+		if _, err := os.Stat(filePath); err != nil {
+			filePath = path.Join(wd, fileName)
+		}
+	}
+
+	return filePath
 }

@@ -14,10 +14,13 @@ import (
 func main() {
 	fmt.Println("sanko/gc-link")
 
-	err := godotenv.Load(".env")
+	// eviroment variable
+	env := getFilePath(".env", "")
+	err := godotenv.Load(env)
 	if err != nil {
 		log.Fatalf("Unload .env")
 	}
+	sammary := os.Getenv("SUMMARY")
 
 	ctx := context.Background()
 
@@ -36,18 +39,16 @@ func main() {
 	if err != nil {
 		log.Fatalf("Unable to retrieve events. %v", err)
 	}
-
 	log.Print(events)
 
+	var createList []string = days
+	var deleteList []string
+
 	if len(events.Items) == 0 {
-		fmt.Println("No upcoming events found.")
-
+		for _, day := range createList {
+			createEvent(*service, day, sammary)
+		}
 	} else {
-		var createList []string = days
-		var deleteList []string
-
-		// eviroment variable
-		sammary := os.Getenv("SUMMARY")
 		for _, item := range events.Items {
 			if item.Summary != sammary {
 				continue
@@ -85,7 +86,7 @@ func main() {
 
 		fmt.Println(createList)
 		for _, day := range createList {
-			createEvent(*service, day)
+			createEvent(*service, day, sammary)
 		}
 
 		fmt.Println(deleteList)
